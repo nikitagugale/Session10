@@ -1,0 +1,40 @@
+{
+  "milestone": 3,
+  "title": "Design the scoped token",
+  "schedule": {
+    "totalMinutes": 12,
+    "launchMinutes": 1,
+    "hintAfterMinutes": [
+      3,
+      5,
+      7
+    ],
+    "pulseAfterMinutes": 7,
+    "checkpointAfterMinutes": 8
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "Write down the questions the service must be able to answer from the token alone, without trusting the request body: who issued it, who it is for, who the agent is acting for, what it may do, up to how much, and until when."
+    },
+    {
+      "label": "Approach",
+      "text": "Use the registered JWT claim names where one exists: `iss` (issuer), `aud` (audience), `sub` (subject), `exp` (expiry). The agent acting on somebody's behalf is the `act` claim (the idea comes from token exchange, RFC 8693).\n\nThe two custom claims are a list of tool names the token may call, and a number for the most it may move. The card gives their names."
+    },
+    {
+      "label": "Near-solution",
+      "text": "A table with columns Claim, Example, and Why it exists, and one row per claim.\n\nThen a second table comparing a human role with the agent scope for the same job: `card_ops` can get_balance and freeze_card, so the agent that freezes cards gets only freeze_card; `fraud_analyst` can get_balance and flag_transaction, so the agent that flags gets only flag_transaction.\n\nFinish with two sentences on why the agent's token must be narrower than the human role it replaces."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: Our account agent calls bank tools with one shared credential. We want a scoped token instead. The service will only ever see the token, so everything it needs to decide must be inside it.\n\nTASK: Design a scoped-token schema for the account agent. It must be narrower than any human role on the team.\n\nREQUIREMENTS: The token must say who issued it (iss), who it is for (aud), which person the agent is acting for (sub), which agent is acting (act, with act.sub), which actions it may call (allowed_actions: an array of tool names, one action per token), the most it may move (max_amount, a number), and when it stops working (exp, an absolute time, not a duration).\n\nFORMAT: Write docs/token-schema.md. A table of claims with an example value and one line on why each exists. Then a table comparing human roles with agent scopes for freeze_card (card_ops can get_balance and freeze_card) and flag_transaction (fraud_analyst can get_balance and flag_transaction). Say why the agent's token must be narrower than the human role it replaces. Do not change any code.\n\nVERIFY: npm run step -- 3",
+    "approach": "Each claim answers one question the service cannot safely get from the request: iss (who vouches), aud (is it for me), sub (whose account rules apply), act (who is really calling), allowed_actions (may it do this), max_amount (is this too much), exp (is it still alive).\n\nThe comparison table is the heart of \"narrower than any human role\": a person can notice something odd and stop; an agent calling a tool cannot, so the token has to carry the limits.",
+    "commonMistakes": [
+      "Using \"ttl\" as a claim name. A token carries the absolute expiry, exp.",
+      "Making allowed_actions a string. It is an array, and the next milestone shows why that matters.",
+      "Taking the person's identity from the request body instead of from sub. Anyone can type any name into a body.",
+      "Designing the schema without saying what it is narrower than (the comparison table).",
+      "Giving the agent the same actions as the human role \"to be safe\"."
+    ]
+  }
+}

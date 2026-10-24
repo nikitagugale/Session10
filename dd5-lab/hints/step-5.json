@@ -1,0 +1,39 @@
+{
+  "milestone": 5,
+  "title": "Protect freeze_card",
+  "schedule": {
+    "totalMinutes": 10,
+    "launchMinutes": 1,
+    "hintAfterMinutes": [
+      3,
+      4,
+      5
+    ],
+    "pulseAfterMinutes": 5,
+    "checkpointAfterMinutes": 6
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "Where do the routes live? Open src/app.js and find the line for freeze_card. What stands in front of the handler today?"
+    },
+    {
+      "label": "Approach",
+      "text": "Express runs the functions on a route from left to right. Replace the old shared-credential check on the freeze_card route with your scope gate for the freeze_card action, and leave the other two routes exactly as they are."
+    },
+    {
+      "label": "Near-solution",
+      "text": "Import requireScope from ./middleware/require-scope.js, and give the freeze_card route `requireScope('freeze_card')` where `sharedCredential` was.\n\nRestart the server (Ctrl+C, then npm run dev) before you run `npm run zoo`: the running server still has the old code."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: src/app.js defines three tool routes behind one shared credential. src/middleware/require-scope.js now has a correct requireScope(action).\n\nTASK: Protect only POST /tools/freeze_card with requireScope('freeze_card'). The handler itself stays as it is.\n\nCONSTRAINTS: get_balance and flag_transaction keep working with the old shared credential for now (hardening them is the homework). Do not change anything else.\n\nVERIFY: Restart the server, then npm run zoo shows every answer as a hardened endpoint gives it, and npm run step -- 5 passes. The old broad token (npm run -s token -- broad) must now be a 403 on freeze_card.",
+    "approach": "One import and one changed line. The old token is still a real, signed token, so it now gets a 403 (valid, but not allowed), not a 401 (unknown or bad).\n\nDo not forget the restart. \"My change does nothing\" is nearly always a server that is still running the old code.",
+    "commonMistakes": [
+      "Not restarting the server after the change.",
+      "Hardening all three tools at once. The milestone says freeze_card only, and that is on purpose.",
+      "Putting requireScope after the handler, where it can never stop anything.",
+      "Editing the handler instead of the route."
+    ]
+  }
+}

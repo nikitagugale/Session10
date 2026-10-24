@@ -1,0 +1,39 @@
+{
+  "milestone": 2,
+  "title": "Work out what the tools really need",
+  "schedule": {
+    "totalMinutes": 6,
+    "launchMinutes": 1,
+    "hintAfterMinutes": [
+      2,
+      3,
+      4
+    ],
+    "pulseAfterMinutes": 3,
+    "checkpointAfterMinutes": 4
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "For each tool file in src/tools, ask one question: what does this tool read or change? A tool only needs permission for that."
+    },
+    {
+      "label": "Approach",
+      "text": "The token's own `permissions` list is the vocabulary, so choose names from it. A wildcard (`*`) means \"everything of that kind\". Match each tool's single action to one name in that list.\n\nThe permissions left over, the ones no tool touches, are the unused ones."
+    },
+    {
+      "label": "Near-solution",
+      "text": "get_balance only reads an account. flag_transaction marks a transaction. freeze_card changes a card.\n\nSo each tool needs one permission, and the other eight in the list (write, unfreeze, reissue, set a limit, reverse, read or write customer PII, read transactions) are unused.\n\nOne of those eight is a judgement call: does flag_transaction need `transactions:read` just to look the transaction up? The check accepts either answer, so decide, and say why in your log."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: The three tools are in src/tools/*.js. The token's permissions list (from npm run -s decode -- --env) is the only vocabulary for permission names. Do not change any code.\n\nTASK: For each tool, name the minimum permission it needs, choosing from the token's own permissions list. Then list every permission in the token that no tool needs.\n\nOUTPUT: add two keys to docs/findings.json: toolPermissions ({ get_balance, flag_transaction, freeze_card } each mapped to one permission string) and unusedPermissions (an array of permission strings). Keep the keys from milestone 1.\n\nVERIFY: npm run step -- 2",
+    "approach": "get_balance needs accounts:read:*, flag_transaction needs transactions:flag, freeze_card needs cards:freeze. Eight permissions are unused.\n\nStretch answer: even the three that are needed are wider than the job. accounts:read:* is a wildcard for reading everything, when get_balance only needs one account's balance.",
+    "commonMistakes": [
+      "Inventing permission names that are not in the token's list.",
+      "Putting a needed permission (like cards:freeze) in the unused list.",
+      "Listing only a few unused ones. The point is how much surplus the token carries.",
+      "Skipping the \"why\" of the judgement call on transactions:read."
+    ]
+  }
+}

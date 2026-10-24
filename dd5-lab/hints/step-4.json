@@ -1,0 +1,41 @@
+{
+  "milestone": 4,
+  "title": "Validate the token properly",
+  "schedule": {
+    "totalMinutes": 19,
+    "launchMinutes": 2,
+    "hintAfterMinutes": [
+      5,
+      8,
+      11
+    ],
+    "pulseAfterMinutes": 13,
+    "checkpointAfterMinutes": 14
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "Run the zoo against the starter file:\n\n  npm run zoo -- --middleware src/middleware/require-scope.js\n\nRead the rows marked `<-- not yet`. They are your bug reports. For each one, ask: what exactly does the library, or the JavaScript, do with that input?"
+    },
+    {
+      "label": "Approach",
+      "text": "Two rows are wrong. One is about what happens when a claim is missing altogether. The other is about the type of a claim.\n\nQuestion 1: what does the JWT library do about expiry for a token that has no expiry claim?\nQuestion 2: what does `.includes` do when the thing is a string, not an array?"
+    },
+    {
+      "label": "Near-solution",
+      "text": "The library only checks `exp` if the claim is there, so a token without one is valid for ever: check for it yourself and refuse it. And `.includes` on a string is a substring search, so check the claim is an array first.\n\nWhile you are in there, three cheap hardening steps: pin the algorithm (`algorithms: ['RS256']`), parse the header strictly (the word Bearer, then one token), and give every kind of bad token the same 401 body."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: src/middleware/require-scope.js holds a helper from a course deck. It is not wired into any route yet. Tokens are RS256 JWTs. The public key is in process.env.JWT_PUBLIC_KEY. The issuer is https://auth.internal.bank/ and the audience is agent-tools.\n\nTASK: Review the helper and list everything wrong with it BEFORE you change anything. Then fix it.\n\nACCEPTANCE: It exports requireScope(action). A missing, malformed or invalid token is a 401 {\"error\":\"invalid_token\"}, whatever the reason. A valid token that is not allowed this action is a 403 {\"error\":\"insufficient_scope\"}. A token with no expiry is invalid. allowed_actions must be an array that contains the action. On success, put the verified claims on req.tokenClaims and call next(). Do not wire it into a route yet.\n\nVERIFY: npm run zoo -- --middleware src/middleware/require-scope.js shows every answer as a hardened endpoint gives it; npm run step -- 4; npm test stays green.",
+    "approach": "The zoo shows two of the starter's problems, because they are the two that let a bad token through. A review finds more, and some are hardening rather than exploitable flaws: the zoo cannot tell you which is which, so for each finding ask whether you can prove it can be exploited.\n\nThe reference fixes: pin algorithms to RS256; require a numeric exp (the library will not); require Array.isArray(allowed_actions) before includes; parse \"Bearer <token>\" strictly; return the same 401 for every invalid token so the reason is not leaked; return after every denial.\n\nWhat the zoo showed: the starter lets in a token with no exp (200, should be 401) and a string-valued allowed_actions (200, should be 403). Everything else the library already refused.",
+    "commonMistakes": [
+      "Adding a maximum token lifetime. It would turn the old ten-year token into a 401, but the milestone-5 criterion wants a 403 (a valid token that is simply not allowed).",
+      "Returning different messages for expired, wrong signature and wrong audience. That tells an attacker exactly what to fix.",
+      "Forgetting to `return` after sending a denial, so the request carries on to the handler.",
+      "Trusting `jwt.decode`. Decoding is not verifying.",
+      "Wiring the middleware into a route in this milestone. That is milestone 5.",
+      "Adding a strict token-type check (token_use must be \"access\") and not re-running the zoo: the old shared credential has no token_use at all, so its row quietly turns from 403 into 401."
+    ]
+  }
+}

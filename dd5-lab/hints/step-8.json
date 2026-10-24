@@ -1,0 +1,40 @@
+{
+  "milestone": 8,
+  "title": "Close the confused-deputy hole",
+  "schedule": {
+    "totalMinutes": 19,
+    "launchMinutes": 2,
+    "hintAfterMinutes": [
+      5,
+      8,
+      11
+    ],
+    "pulseAfterMinutes": 13,
+    "checkpointAfterMinutes": 14
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "The attack worked because the endpoint only asked one question: may this token freeze cards? What is the second question it forgot to ask?"
+    },
+    {
+      "label": "Approach",
+      "text": "The token's `sub` says who the agent is acting for. The store knows who owns each account. The decision belongs in the handler, because only the handler knows which account was asked for.\n\nAlso think about what a request for an account that does not exist should answer, compared with a request for somebody else's account."
+    },
+    {
+      "label": "Near-solution",
+      "text": "If the account is missing, or its `ownerId` is not the token's `sub`, refuse with 403 `{\"error\":\"forbidden\"}`. Use exactly the same status and body for both cases, and say nothing about the account in the body.\n\nRecord the refusal as one `denied` audit entry with a reason (not_account_owner, or unknown_account). A token whose sub is the agent itself, with no user, owns nothing."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: freeze_card is protected by requireScope, and a valid scope lets Ana's agent freeze Ben's card (npm run attack proves it). The token's sub is the person the agent is acting for. Each account has an ownerId in the store.\n\nTASK: Make freeze_card refuse a request for an account the caller is not authorised for, even when the token has the freeze_card scope.\n\nACCEPTANCE: The account must belong to the token's sub (account.ownerId). Refuse with 403 {\"error\":\"forbidden\"}. An account that does not exist must get exactly the same response as one that belongs to somebody else, and the body must not mention the account. A token whose sub is not a person who owns the account (for example the agent's own service identity) owns nothing: refuse it the same way. Record the refusal in the audit trail as one denied entry with a reason (not_account_owner or unknown_account). A refused call leaves exactly one audit entry. A missing accountId is still a 400.\n\nVERIFY: npm run attack says OK, then npm run step -- 8.",
+    "approach": "Scope says \"this caller may freeze cards\". Ownership says \"this caller may freeze THIS card\". Both are needed. This is object-level authorization (OWASP API1, broken object level authorization).\n\nThe same 403 for \"missing\" and \"not yours\" removes an oracle: otherwise an attacker could try thousands of account numbers and learn which exist.",
+    "commonMistakes": [
+      "Returning 404 for a missing account and 403 for somebody else's: that tells an attacker which accounts exist.",
+      "Putting the account owner, name or balance in the error body.",
+      "Taking the \"caller\" from the request body instead of the verified token.",
+      "Auditing at the scope gate as \"allowed\" and then again as \"denied\" in the handler: one call, two entries.",
+      "Doing the check in the middleware, which does not know which account the request is about."
+    ]
+  }
+}

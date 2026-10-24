@@ -1,0 +1,41 @@
+{
+  "milestone": 7,
+  "title": "Leave an audit trail",
+  "schedule": {
+    "totalMinutes": 12,
+    "launchMinutes": 1,
+    "hintAfterMinutes": [
+      3,
+      5,
+      7
+    ],
+    "pulseAfterMinutes": 7,
+    "checkpointAfterMinutes": 8
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "Which code sees every refusal? Which code sees the success? You need an entry from both, and exactly one entry per call."
+    },
+    {
+      "label": "Approach",
+      "text": "`audit(entry)` lives in src/lib/audit.js: read its header comment. Write the entry when the outcome is known, with the fields from the card. When nobody could be identified (a bad token), `sub` is null, because you must not take identity from a token you could not verify.\n\nBut a token that verified and was refused only for its scope is a known caller: the entry should say who tried. Think about which code has verified the token on a call it refuses."
+    },
+    {
+      "label": "Near-solution",
+      "text": "The scope gate sees the 401s and the 403s, so it can call `audit` just before it answers. The tool handler sees the success, so it records the allowed call.\n\nThe entry must never contain the token or customer data (a name, a balance). `npm run state` shows exactly what you wrote."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: Every privileged tool call must leave a record that lets someone reconstruct an incident. audit(entry) in src/lib/audit.js keeps entries in memory and /_lab/state (npm run state) shows them.\n\nTASK: Record every call to POST /tools/freeze_card, allowed or denied, including calls with a bad or missing token, exactly once.\n\nACCEPTANCE: Each entry has: event \"tool_call\", action, outcome (\"allowed\" or \"denied\"), reason (on a denial, for example invalid_token or insufficient_scope), sub (the person the agent acts for, taken only from a verified token: null when the token failed verification or there was none, but a token that verified and was refused for its scope is still a known caller, so record who tried), actor (act.sub, or null), allowedActions (the array from the token, or []), accountId (null if there was none) and requestId (req.id). Never put the token, or customer data such as a name or balance, in an entry.\n\nVERIFY: npm run step -- 7, then npm run state to read a sample.",
+    "approach": "One entry per call, written once the decision is made. Denials count as much as successes: a run of failures is what probing looks like.\n\nIdentity comes only from claims that were verified. A bad token yields sub: null, not whatever the unverified payload claims.",
+    "commonMistakes": [
+      "Writing an \"allowed\" entry before the handler runs. Milestone 8 adds a refusal inside the handler, and you would log the same call twice.",
+      "Taking sub from jwt.decode on a token that failed verification.",
+      "Recording a scope refusal with sub: null, because the code that writes the entry never saw the verified claims.",
+      "Logging the Authorization header, or the token, for debugging.",
+      "Logging the account holder's name or balance \"for context\".",
+      "Forgetting the requests with no token at all."
+    ]
+  }
+}

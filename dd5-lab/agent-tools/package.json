@@ -1,0 +1,32 @@
+{
+  "name": "agent-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DD5 lab: the BFSI agent-tools service. Scope its credential down to least privilege.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node src/server.js",
+    "test": "node scripts/test.mjs",
+    "help": "node scripts/help.mjs",
+    "progress": "node scripts/progress.mjs",
+    "hint": "node scripts/hint.mjs",
+    "step": "node scripts/lab.mjs step",
+    "checkpoint": "node scripts/lab.mjs checkpoint",
+    "token": "node scripts/token.mjs",
+    "decode": "node scripts/decode.mjs",
+    "zoo": "node scripts/zoo.mjs",
+    "attack": "node scripts/attack.mjs",
+    "refresh-demo": "node scripts/refresh-demo.mjs",
+    "state": "node scripts/state.mjs",
+    "doctor": "node scripts/lab.mjs doctor",
+    "baseline": "node scripts/lab.mjs baseline"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "ioredis-mock": "8.13.1",
+    "jsonwebtoken": "9.0.3"
+  }
+}

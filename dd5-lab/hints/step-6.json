@@ -1,0 +1,40 @@
+{
+  "milestone": 6,
+  "title": "Prove it with tests",
+  "schedule": {
+    "totalMinutes": 15,
+    "launchMinutes": 2,
+    "hintAfterMinutes": [
+      4,
+      6,
+      8
+    ],
+    "pulseAfterMinutes": 9,
+    "checkpointAfterMinutes": 10
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "Look at tests/baseline/service.test.js to see how a test starts the service: `useServer()` and the `api` client. The harness also gives you `mintScoped()` for a good token and `forge()` for a broken one.\n\n`npm run -s token -- --help` lists every kind of forged token."
+    },
+    {
+      "label": "Approach",
+      "text": "Cover two layers. First the policy table (roles to actions, agent scopes to actions). Second the real endpoint: a good token gets 200, and each kind of bad token gets the right status.\n\nAsk yourself which tokens would catch the helper you started from in milestone 4. The check will run your tests against that helper and expects at least one of them to fail."
+    },
+    {
+      "label": "Near-solution",
+      "text": "The invariant to test: for every agent scope and every human role that shares one of its actions, the scope's actions are a strict subset of the role's.\n\nName each test `allow: ...` or `deny: ...`, and aim for more denies than allows: security tests are mostly \"this must not work\".\n\nRun your file with `npm test -- auth.scope`."
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: The service has a role model for people and needs a narrower scope model for the agent. Roles: support_agent can get_balance; fraud_analyst can get_balance and flag_transaction; card_ops can get_balance and freeze_card; admin can do all three. Agent scopes: card-agent (freeze_card only) and fraud-agent (flag_transaction only).\n\nTASK: Write the policy table and tests for it.\n\nACCEPTANCE: Put the table in src/auth/policy.js, exporting ROLE_ACTIONS (role to array of actions) and AGENT_SCOPES (agent scope to array of actions). Every agent scope must be strictly narrower than each human role that shares one of its actions. Put the tests in tests/learner/auth.scope.test.js using node:test, node:assert and useServer from tests/helpers/harness.js. Start every test name with \"allow:\" or \"deny:\". Test the real freeze_card endpoint, not only the table: a good scoped token, and tokens that are expired, have no exp, are signed with the wrong key, have the wrong audience or issuer, are unsigned (alg none), are valid but for another action, have an empty allowed_actions, or have an allowed_actions that is a string (forge() and mintScoped() make these).\n\nVERIFY: npm test -- auth.scope, then npm run step -- 6 (it also checks that your tests fail against the milestone-4 starter helper).",
+    "approach": "A test that cannot fail proves nothing. The check swaps the starter helper in for your middleware and runs your tests: if they all still pass, they are not guarding the two real gaps (no exp, string allowed_actions).\n\nMost of the value is in the deny cases, and in asserting the exact status and body so a 401 where a 403 was meant is a failing test.",
+    "commonMistakes": [
+      "Only testing the table. The table is data; the endpoint is where the bug would be.",
+      "Forgetting the no-exp and string-claim cases, so the tests would also pass for the unsafe helper.",
+      "Starting your own server in before/after hooks. Use useServer(): it is safe with --grep and file filters.",
+      "Naming tests without the allow:/deny: prefix.",
+      "Asserting only the status code, and not that the card stayed active."
+    ]
+  }
+}

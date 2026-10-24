@@ -1,0 +1,7 @@
+{
+  "permissionsInToken": 11,
+  "tokenValidDays": "__DAYS__",
+  "canActOnAnyAccount": true,
+  "auditEntriesAfterUse": 0,
+  "canBeRevoked": false
+}

@@ -1,0 +1,22 @@
+{
+  "permissionsInToken": 11,
+  "tokenValidDays": "__DAYS__",
+  "canActOnAnyAccount": true,
+  "auditEntriesAfterUse": 0,
+  "canBeRevoked": false,
+  "toolPermissions": {
+    "get_balance": "accounts:read:*",
+    "flag_transaction": "transactions:flag",
+    "freeze_card": "cards:freeze"
+  },
+  "unusedPermissions": [
+    "accounts:write:*",
+    "cards:unfreeze",
+    "cards:reissue",
+    "cards:set-limit",
+    "transactions:read",
+    "transactions:reverse",
+    "customers:pii:read",
+    "customers:pii:write"
+  ]
+}

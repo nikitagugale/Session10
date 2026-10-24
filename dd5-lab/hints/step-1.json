@@ -1,0 +1,40 @@
+{
+  "milestone": 1,
+  "title": "Find the over-broad credential",
+  "schedule": {
+    "totalMinutes": 8,
+    "launchMinutes": 1,
+    "hintAfterMinutes": [
+      3,
+      4,
+      5
+    ],
+    "pulseAfterMinutes": 5,
+    "checkpointAfterMinutes": 6
+  },
+  "levels": [
+    {
+      "label": "Nudge",
+      "text": "A token is just text, and its middle part is readable. This kit has a command for reading it. `npm run help` lists every command.\n\nThen ask yourself three questions: what is inside it, does it work on somebody else's account, and did the service write anything down?"
+    },
+    {
+      "label": "Approach",
+      "text": "Decode the credential with the decode command (it takes `--env` for the one in config/agent.env).\n\nFor behaviour, ask the service. The token command can print the old credential (the word is `broad`), and curl can put it in an `Authorization: Bearer <token>` header. Start the service first (`npm run dev` in another terminal). `npm run state` shows the accounts and the audit trail."
+    },
+    {
+      "label": "Near-solution",
+      "text": "Count the entries in the token's `permissions` list. The decode output prints when it expires: turn that into whole days from now.\n\nFreeze Ben's card (`acc_ben_1`) using the old token: POST to /tools/freeze_card with JSON {\"accountId\":\"acc_ben_1\"}. Did it work? Then run `npm run state` and count the audit entries.\n\nFor revocation, try POST /idp/revoke with curl. A 404 means the service has no such endpoint.\n\nYou can also read the code: src/middleware/legacy-auth.js is what decides whether the old token is accepted. What does it compare, and is there anything in it that could say \"this one is cancelled\"?"
+    }
+  ],
+  "reveal": {
+    "referenceBrief": "CONTEXT: This repo is a Node/Express service with three agent tools in src/tools. The agent calls them with one shared token, ACCOUNT_AGENT_TOKEN, loaded from config/agent.env. Do not change any code.\n\nTASK: Establish from evidence what that credential can do, and write the facts to docs/findings.json.\n\nHOW: Decode the token (npm run -s decode -- --env) and count its permissions. Work out how many whole days it has left. Start a temporary copy of the service on a spare port (PORT=4011 node src/server.js &) and use the old token (npm run -s token -- broad) to freeze acc_ben_1's card. Read what the audit trail holds (API=http://127.0.0.1:4011 npm run state). Try POST /idp/revoke.\n\nOUTPUT: docs/findings.json with exactly these keys: permissionsInToken (number), tokenValidDays (number), canActOnAnyAccount (boolean), auditEntriesAfterUse (number), canBeRevoked (boolean). Stop the temporary server when you are done.\n\nVERIFY: npm run step -- 1",
+    "approach": "The facts: the token lists 11 permissions; it is good for about 3650 days (ten years); it froze Ben's card, so it works on any account; the audit trail has 0 entries; there is no revoke endpoint, so it cannot be cut off.\n\nThe habit is more important than the numbers: never trust a name. ACCOUNT_AGENT_TOKEN sounds modest. The claims say admin. Decode it, then test its behaviour, then check whether anything was recorded.",
+    "commonMistakes": [
+      "Trusting the variable name instead of decoding the token.",
+      "Reading the claims but never testing the behaviour: a claim says what a token says it can do, a request shows what it actually can do.",
+      "Forgetting that `scope` and `permissions` are two lists in the same token. Count the `permissions` list.",
+      "Counting days in months or years. The check wants whole days (two either way is fine).",
+      "Putting numbers in quotes. \"11\" is text; 11 is a number."
+    ]
+  }
+}
